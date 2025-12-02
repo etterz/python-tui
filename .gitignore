@@ -37,6 +37,3 @@ bandit-report.json
 dist/
 build/
 *.egg-info/
-
-# Node.js
-package-lock.json

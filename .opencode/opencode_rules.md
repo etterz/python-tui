@@ -16,3 +16,14 @@ Each time a new development session begins:
 6. Explain all git operations performed during the session.
 
 This ensures organized development, proper branching, clear communication of changes, and synchronization across multiple development machines.
+
+## Script Management Workflow
+
+- A `new_scripts/` directory has been created for user-placed scripts (Python, PowerShell, etc.).
+- This directory serves as a 'new feature' staging area.
+- Scripts placed here are not to be packaged or included in the TUI until explicitly requested for implementation.
+- When the user requests implementation of a script into the TUI:
+  1. Move the script from `new_scripts/` to `scripts/`.
+  2. Integrate it into the TUI functionality.
+  3. Follow the standard git workflow for the implementation.
+- This keeps the codebase clean and ensures scripts are only included when properly integrated.

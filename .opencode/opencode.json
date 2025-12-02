@@ -1,6 +1,6 @@
 {
     "$schema": "https://opencode.ai/config.json",
-    "model": "ollama/qwen3:8b-fast",
+    "model": "opencode/zen-grok-code-fast-1",
     "provider": {
         "ollama": {
             "npm": "@ai-sdk/openai-compatible",

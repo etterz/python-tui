@@ -1,0 +1,221 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "model": "ollama/qwen3:8b-fast",
+    "provider": {
+        "ollama": {
+            "npm": "@ai-sdk/openai-compatible",
+            "name": "Ollama (Local LLMs)",
+            "options": {
+                "baseURL": "http://127.0.0.1:11434/v1"
+            },
+            "models": {
+                "qwen3:8b-fast": {
+                    "name": "⚡ Qwen 3 8B (Fast)",
+                    "tool_call": true,
+                    "reasoning": true,
+                    "temperature": true,
+                    "limit": {
+                        "context": 32768,
+                        "output": 8192
+                    },
+                    "options": {
+                        "temperature": 0.3,
+                        "top_p": 0.9,
+                        "top_k": 40,
+                        "repeat_penalty": 1.1
+                    }
+                }
+            }
+        }
+    },
+    "mcp": {
+        "filesystem": {
+            "type": "local",
+            "command": [
+                "npx",
+                "-y",
+                "@modelcontextprotocol/server-filesystem",
+                "."
+            ],
+            "enabled": true
+        },
+        "dev-assistant": {
+            "type": "local",
+            "command": [
+                "node",
+                "C:\\mcp-dev-assistant\\server.js"
+            ],
+            "enabled": true,
+            "environment": {
+                "OLLAMA_BASE_URL": "http://127.0.0.1:11434/v1",
+                "DEFAULT_OLLAMA_MODEL": "qwen3:8b-fast"
+            }
+        }
+    },
+    "permission": {
+        "edit": "ask",
+        "bash": "ask",
+        "webfetch": "deny"
+    },
+    "instructions": [
+        "opencode_rules.md"
+    ],
+    "agent": {
+        "build": {
+            "model": "ollama/qwen3:8b-fast",
+            "temperature": 0.3,
+            "top_p": 0.9,
+            "description": "Python TUI developer that builds, tests, and maintains the script runner application",
+            "mode": "primary",
+            "prompt": "{file:prompts/tui-build-agent.md}",
+            "permission": {
+                "edit": "ask",
+                "bash": "ask"
+            }
+        },
+        "reviewer": {
+            "model": "ollama/qwen3:8b-fast",
+            "description": "Security-focused code reviewer specializing in TUI applications and script execution safety",
+            "mode": "subagent",
+            "prompt": "{file:prompts/security-reviewer-agent.md}",
+            "tools": {
+                "edit": false,
+                "write": false
+            },
+            "permission": {
+                "edit": "deny",
+                "bash": "deny"
+            }
+        },
+        "test-engineer": {
+            "model": "ollama/qwen3:8b-fast",
+            "description": "Test specialist for TUI applications with focus on integration and UI testing",
+            "mode": "subagent",
+            "prompt": "{file:prompts/tui-test-engineer-agent.md}",
+            "permission": {
+                "edit": "ask",
+                "bash": "ask"
+            }
+        },
+        "doc-writer": {
+            "model": "ollama/qwen3:8b-fast",
+            "description": "Documentation specialist for TUI applications and user guides",
+            "mode": "subagent",
+            "prompt": "{file:prompts/tui-doc-writer-agent.md}",
+            "permission": {
+                "edit": "ask",
+                "bash": "deny"
+            }
+        }
+    },
+    "command": {
+        "implement": {
+            "template": "Implement this TUI feature end-to-end:\n1. Create/modify necessary files in tui/ directory\n2. Ensure proper Textual widget usage\n3. Write comprehensive tests (unit + UI tests)\n4. Run tests to verify: pytest tests/ -v\n5. Update README.md if user-facing\n6. Prepare commit message\n\nFeature: $ARGUMENTS\n\nMake actual changes - don't just suggest.",
+            "description": "Implement TUI feature with tests and docs",
+            "agent": "build"
+        },
+        "test": {
+            "template": "For the selected code:\n1. Generate comprehensive tests (unit, integration, UI with Pilot)\n2. Include edge cases: empty scripts dir, path traversal, timeouts\n3. Create test file in tests/ directory\n4. Run: pytest tests/ -v --cov=tui\n5. Report results with coverage percentage\n\n$ARGUMENTS",
+            "description": "Generate and execute TUI tests",
+            "agent": "test-engineer"
+        },
+        "security-audit": {
+            "template": "Perform security audit on TUI application:\n1. Check script execution for command injection\n2. Validate path traversal protection\n3. Review output sanitization\n4. Check timeout mechanisms\n5. Run: bandit -r tui/ -ll\n6. Run: safety check --json\n7. Provide detailed vulnerability report\n\n$ARGUMENTS",
+            "description": "Comprehensive security audit",
+            "agent": "reviewer"
+        },
+        "review": {
+            "template": "Review TUI code for:\n1. Security vulnerabilities (script execution, path validation)\n2. Textual best practices\n3. Async/await correctness\n4. Error handling completeness\n5. Test coverage gaps\n6. Documentation quality\n\nProvide detailed feedback with examples.\n\n$ARGUMENTS",
+            "description": "Code review with security focus",
+            "agent": "reviewer"
+        },
+        "refactor": {
+            "template": "Refactor TUI code following best practices:\n1. Analyze current structure\n2. Apply SOLID principles\n3. Improve widget composition\n4. Optimize async operations\n5. Update/generate tests\n6. Run: pytest tests/ -v\n7. Update documentation\n\n$ARGUMENTS",
+            "description": "Refactor with testing",
+            "agent": "build"
+        },
+        "docs": {
+            "template": "Update TUI documentation:\n1. Review current README.md\n2. Check for new features/changes\n3. Update keyboard shortcuts section\n4. Ensure installation steps are current\n5. Add usage examples for new features\n6. Update architecture section if needed\n\nFocus: $ARGUMENTS",
+            "description": "Update documentation",
+            "agent": "doc-writer"
+        },
+        "commit": {
+            "template": "Prepare for git commit:\n1. Review all modified files\n2. Ensure tests pass: pytest tests/ -v\n3. Check security: bandit -r tui/ -ll\n4. Update README.md if needed\n5. Generate conventional commit message\n6. Show summary and ASK permission to commit\n\n$ARGUMENTS",
+            "description": "Prepare and request commit approval",
+            "agent": "build"
+        },
+        "debug": {
+            "template": "Debug this TUI issue:\n1. Analyze code for bugs\n2. Check Textual widget interactions\n3. Review async/await patterns\n4. Add logging/debugging code if needed\n5. Fix the issues\n6. Create regression tests\n7. Run: pytest tests/ -v -s\n\n$ARGUMENTS",
+            "description": "Debug and fix with tests",
+            "agent": "build"
+        },
+        "add-widget": {
+            "template": "Create new Textual widget:\n1. Create widget file in tui/widgets/\n2. Implement with proper Textual patterns\n3. Add CSS styling if needed\n4. Create unit tests in tests/ui/\n5. Test widget rendering: pytest tests/ui/ -v\n6. Update main screen to use widget\n7. Document in README if user-facing\n\nWidget spec: $ARGUMENTS",
+            "description": "Create new Textual widget with tests",
+            "agent": "build"
+        },
+        "add-script-feature": {
+            "template": "Add script execution feature:\n1. Update script_executor.py or script_manager.py\n2. Ensure security (validate paths, sanitize output)\n3. Add timeout protection\n4. Create comprehensive tests\n5. Run: pytest tests/unit/test_executor.py -v\n6. Update config.json documentation\n7. Add to README usage section\n\nFeature: $ARGUMENTS",
+            "description": "Add script-related feature with security",
+            "agent": "build"
+        },
+        "run-app": {
+            "template": "Run the TUI application:\n1. Check if dependencies are installed\n2. If not: pip install -r requirements.txt\n3. Run: python main.py\n4. Monitor for errors\n5. Report startup status\n\n$ARGUMENTS",
+            "description": "Run the TUI application",
+            "agent": "build"
+        },
+        "coverage": {
+            "template": "Check test coverage:\n1. Run: pytest tests/ --cov=tui --cov-report=term-missing --cov-report=html -v\n2. Analyze coverage report\n3. Identify untested files and functions\n4. For critical untested code:\n   - Read source file\n   - Write comprehensive tests\n   - Run tests to verify\n5. Report coverage percentage and gaps\n\n$ARGUMENTS",
+            "description": "Detailed test coverage analysis",
+            "agent": "build"
+        }
+    },
+    "watcher": {
+        "ignore": [
+            "**/.env",
+            "**/.env.*",
+            "**/venv/**",
+            "**/__pycache__/**",
+            "**/.pytest_cache/**",
+            "**/.coverage",
+            "**/htmlcov/**",
+            "**/.git/**",
+            "**/dist/**",
+            "**/build/**",
+            "**/*.pyc",
+            "**/.mypy_cache/**"
+        ]
+    },
+    "formatter": {
+        "black": {
+            "command": [
+                "black",
+                "$FILE"
+            ],
+            "extensions": [
+                ".py"
+            ]
+        },
+        "isort": {
+            "command": [
+                "isort",
+                "$FILE"
+            ],
+            "extensions": [
+                ".py"
+            ]
+        }
+    },
+    "lsp": {
+        "python": {
+            "command": [
+                "pylsp"
+            ],
+            "extensions": [
+                ".py"
+            ]
+        }
+    },
+    "autoupdate": true,
+    "share": "manual"
+}
